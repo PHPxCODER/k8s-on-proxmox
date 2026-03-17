@@ -475,4 +475,74 @@ It's the same as running `http://10.69.5.240:80`.
 
 ---
 
-You can build any services you like, add an ingress controller, and do whatever you want — it is now a fully functional Kubernetes cluster.
+## 10. HAProxy Ingress Controller
+
+An Ingress Controller allows you to route external HTTP/HTTPS traffic to services inside the cluster using hostnames and paths — a cleaner alternative to exposing every service via LoadBalancer.
+
+### Install via Helm
+
+First, install Helm if you haven't already:
+
+```bash
+curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+```
+
+Add the HAProxy Helm repository and install the ingress controller:
+
+```bash
+helm repo add haproxytech https://haproxytech.github.io/helm-charts
+helm repo update
+
+helm install haproxy-ingress haproxytech/kubernetes-ingress \
+  --create-namespace \
+  --namespace haproxy-controller \
+  --set controller.service.type=LoadBalancer
+```
+
+By setting `controller.service.type=LoadBalancer`, MetalLB will assign it an external IP from your pool automatically.
+
+Verify the controller is running:
+
+```bash
+kubectl get pods -n haproxy-controller
+kubectl get svc -n haproxy-controller
+```
+
+You should see the `haproxy-ingress` service with an `EXTERNAL-IP` assigned from your MetalLB range.
+
+### Example Ingress Resource
+
+Once the controller is running, you can route traffic to your services using an `Ingress` resource. Create `ingress-example.yaml`:
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nginx-ingress
+  annotations:
+    ingress.class: haproxy
+spec:
+  rules:
+  - host: nginx.lab.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: nginx-service
+            port:
+              number: 80
+```
+
+Apply it:
+
+```bash
+kubectl apply -f ingress-example.yaml
+```
+
+Now requests to `http://nginx.lab.local` (with that hostname pointing to your HAProxy external IP in DNS or `/etc/hosts`) will be routed to the nginx service.
+
+---
+
+You can build any services you like and do whatever you want — it is now a fully functional Kubernetes cluster.
