@@ -54,7 +54,7 @@ qm create 200 \
   --memory 4096 \
   --numa 0 \
   --scsihw virtio-scsi-single \
-  --net0 virtio,bridge=vmbr0,tag=5,firewall=1 \
+  --net0 virtio,bridge=vmbr0,tag=5,firewall=0 \
   --ide2 local:iso/ubuntu-26.04-live-server-amd64.iso,media=cdrom \
   --boot "order=scsi0;ide2;net0" \
   --scsi0 transcend:50,discard=on,iothread=1,ssd=1
@@ -72,7 +72,7 @@ qm create 201 \
   --memory 2048 \
   --numa 0 \
   --scsihw virtio-scsi-single \
-  --net0 virtio,bridge=vmbr0,tag=5,firewall=1 \
+  --net0 virtio,bridge=vmbr0,tag=5,firewall=0 \
   --ide2 local:iso/ubuntu-26.04-live-server-amd64.iso,media=cdrom \
   --boot "order=scsi0;ide2;net0" \
   --scsi0 transcend:50,discard=on,iothread=1,ssd=1
@@ -90,7 +90,7 @@ qm create 202 \
   --memory 2048 \
   --numa 0 \
   --scsihw virtio-scsi-single \
-  --net0 virtio,bridge=vmbr0,tag=5,firewall=1 \
+  --net0 virtio,bridge=vmbr0,tag=5,firewall=0 \
   --ide2 local:iso/ubuntu-26.04-live-server-amd64.iso,media=cdrom \
   --boot "order=scsi0;ide2;net0" \
   --scsi0 transcend:50,discard=on,iothread=1,ssd=1
@@ -111,7 +111,7 @@ qm create 200 \
   --memory 4096 \
   --numa 0 \
   --scsihw virtio-scsi-single \
-  --net0 virtio,bridge=vmbr0,tag=5,firewall=1 \
+  --net0 virtio,bridge=vmbr0,tag=5,firewall=0 \
   --ide2 local:iso/ubuntu-26.04-live-server-amd64.iso,media=cdrom \
   --boot "order=scsi0;ide2;net0" \
   --scsi0 local-lvm:50,discard=on,iothread=1,ssd=1
