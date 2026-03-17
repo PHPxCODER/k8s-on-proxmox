@@ -1,8 +1,8 @@
 # k8s on proxmox <br />
 
-First we need to change the DHCP scope on home router so we can have a range of ip addresses that we can assign statically. <br />
-My DHCP scope is `192.168.1.2` - `192.168.1.99` <br />
-so any addresses from `192.168.1.100` to `192.168.1.254` can be assigned statically. <br />
+In our lab setup we are using VLAN **5** with the `10.69.5.0/24` address range. <br />
+The DHCP scope covers `10.69.5.2` - `10.69.5.99` <br />
+so any addresses from `10.69.5.100` to `10.69.5.254` can be assigned statically. <br />
 
 We can now log on to Proxmox and we need to create 3 Linux Virtual Machines <br />
 One for kubernetes Master Node and 2 for Worker Nodes (you can create more nodes if you wish, its just an example). <br />
@@ -39,7 +39,7 @@ qm create 191 \
   --memory 4096 \
   --numa 0 \
   --scsihw virtio-scsi-single \
-  --net0 virtio,bridge=vmbr0,firewall=1 \
+  --net0 virtio,bridge=vmbr0,tag=5,firewall=1 \
   --ide2 local:iso/ubuntu-26.04-live-server-amd64.iso,media=cdrom \
   --boot "order=scsi0;ide2;net0" \
   --scsi0 transcend:50,discard=on,iothread=1,ssd=1
@@ -58,7 +58,7 @@ qm create 192 \
   --memory 2048 \
   --numa 0 \
   --scsihw virtio-scsi-single \
-  --net0 virtio,bridge=vmbr0,firewall=1 \
+  --net0 virtio,bridge=vmbr0,tag=5,firewall=1 \
   --ide2 local:iso/ubuntu-26.04-live-server-amd64.iso,media=cdrom \
   --boot "order=scsi0;ide2;net0" \
   --scsi0 transcend:50,discard=on,iothread=1,ssd=1
@@ -77,7 +77,7 @@ qm create 193 \
   --memory 2048 \
   --numa 0 \
   --scsihw virtio-scsi-single \
-  --net0 virtio,bridge=vmbr0,firewall=1 \
+  --net0 virtio,bridge=vmbr0,tag=5,firewall=1 \
   --ide2 local:iso/ubuntu-26.04-live-server-amd64.iso,media=cdrom \
   --boot "order=scsi0;ide2;net0" \
   --scsi0 transcend:50,discard=on,iothread=1,ssd=1
@@ -97,7 +97,7 @@ qm create 191 \
   --memory 4096 \
   --numa 0 \
   --scsihw virtio-scsi-single \
-  --net0 virtio,bridge=vmbr0,firewall=1 \
+  --net0 virtio,bridge=vmbr0,tag=5,firewall=1 \
   --ide2 local:iso/ubuntu-26.04-live-server-amd64.iso,media=cdrom \
   --boot "order=scsi0;ide2;net0" \
   --scsi0 local-lvm:50,discard=on,iothread=1,ssd=1
@@ -301,7 +301,7 @@ kubectl apply -f https://github.com/flannel-io/flannel/releases/latest/download/
 We can see everything was succesfully created, so we can copy that command that was generated on master node and paste it into our worker nodes. <br />
 Note it says to run it as root so we need sudo, and for me the command was: <br />
 ```
-sudo kubeadm join 192.168.1.191:6443 --token vyg76p.pz5k6dkrkaopvjhi --discovery-token-ca-cert-hash sha256:fb914ae294538ea1d35e18fab62df421f936dd68069eb877aa3b8e49634321a3  
+sudo kubeadm join 10.69.5.191:6443 --token vyg76p.pz5k6dkrkaopvjhi --discovery-token-ca-cert-hash sha256:fb914ae294538ea1d35e18fab62df421f936dd68069eb877aa3b8e49634321a3
 ```
 
 All seems to be ok, we can run now `kubectl get nodes` on master node- that will display all master and worker nodes we have in our cluster <br />
@@ -340,7 +340,7 @@ metadata:
   namespace: metallb-system
 spec:
   addresses:
-  - 192.168.1.240-192.168.1.245 # CHANGE THIS to your desired range
+  - 10.69.5.240-10.69.5.245 # CHANGE THIS to your desired range
 ---
 apiVersion: metallb.io/v1beta1
 kind: L2Advertisement
@@ -405,8 +405,8 @@ kubectl get svc nginx-service
 ```
 
 You should be able to see cluster ip and external ip - the external ip is the one you got from MetalLB and <br />
-Just type that ip address in your browser (like `192.168.1.240` for me) and you should see 'Welcome to nginx' <br />
-It's the same as running `http://192.168.1.240:80` <br />
+Just type that ip address in your browser (like `10.69.5.240` for me) and you should see 'Welcome to nginx' <br />
+It's the same as running `http://10.69.5.240:80` <br />
 
 You can build any services you like, you can add ingress controller, you can do whatever you want as it is now fully functional kubernetes cluster <br />
 
