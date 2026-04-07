@@ -1,0 +1,22 @@
+# Copy to terraform.tfvars and fill in your values.
+# Never commit terraform.tfvars — it contains secrets.
+
+proxmox_endpoint     = "https://10.69.5.10:8006"
+proxmox_api_token    = "root@pam!terraform=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+proxmox_insecure     = true
+proxmox_ssh_username = "root"
+proxmox_node         = "pve"
+
+storage_pool = "local-lvm"   # or "transcend" for external SSD
+iso_storage  = "local"
+
+vlan_tag = 5
+bridge   = "vmbr0"
+gateway  = "10.69.5.1"
+
+master_ip  = "10.69.5.200"
+worker_ips = ["10.69.5.201", "10.69.5.202"]
+
+vm_username    = "ubuntu"
+vm_password    = "changeme"
+ssh_public_key = "ssh-ed25519 AAAA... your-key-here"
