@@ -59,7 +59,7 @@ qm create 200 \
   --onboot 1 \
   --ide2 local:iso/ubuntu-24.04.3-live-server-amd64.iso,media=cdrom \
   --boot "order=scsi0;ide2;net0" \
-  --scsi0 rover-storage-main:100,discard=on,iothread=1,ssd=1
+  --scsi0 rover-storage-main:200,discard=on,iothread=1,ssd=1
 ```
 
 **Worker Node 1 (VM 201)**
