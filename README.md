@@ -12,10 +12,10 @@ so any addresses from `10.69.67.100` to `10.69.67.254` can be assigned staticall
 
 ## 1. Creating Virtual Machines
 
-We need to create 3 Linux Virtual Machines on Proxmox:
+We need to create 4 Linux Virtual Machines on Proxmox:
 
-- **Master Node** — acts as cluster administrator
-- **Worker Node 1 & 2** — the ones actually running containers (you can create more if you wish)
+- **Master Node** — acts as cluster administrator (4 vCPU, 8 GB RAM)
+- **Worker Node 1, 2 & 3** — the ones actually running containers (8 vCPU, 16 GB RAM each)
 
 While any Linux kernel-based system can run Kubernetes, the easiest way to follow this guide is with Ubuntu or another Debian-based OS.
 
@@ -40,6 +40,11 @@ I will go for **Ubuntu Server 24.04 LTS** — go to [THIS LINK](https://ubuntu.c
 
 Note that the Master Node might need a bit more resources than Worker Nodes.
 
+| Node | vCPU | RAM |
+|------|------|-----|
+| Master | 4 (2 cores × 2 sockets) | 8 GB |
+| Worker | 8 (4 cores × 2 sockets) | 16 GB |
+
 #### With rover-storage-main (external storage)
 
 **Master Node (VM 200)**
@@ -51,7 +56,7 @@ qm create 200 \
   --cores 2 \
   --sockets 2 \
   --cpu host \
-  --memory 4096 \
+  --memory 8192 \
   --numa 0 \
   --scsihw virtio-scsi-single \
   --net0 virtio,bridge=vmbr0,tag=67,firewall=0 \
@@ -68,10 +73,10 @@ qm create 201 \
   --name k8s-worker1 \
   --agent 1 \
   --balloon 0 \
-  --cores 2 \
+  --cores 4 \
   --sockets 2 \
   --cpu host \
-  --memory 4096 \
+  --memory 16384 \
   --numa 0 \
   --scsihw virtio-scsi-single \
   --net0 virtio,bridge=vmbr0,tag=67,firewall=0 \
@@ -88,10 +93,30 @@ qm create 202 \
   --name k8s-worker2 \
   --agent 1 \
   --balloon 0 \
-  --cores 2 \
+  --cores 4 \
   --sockets 2 \
   --cpu host \
-  --memory 4096 \
+  --memory 16384 \
+  --numa 0 \
+  --scsihw virtio-scsi-single \
+  --net0 virtio,bridge=vmbr0,tag=67,firewall=0 \
+  --vga qxl,clipboard=vnc,memory=32 \
+  --onboot 1 \
+  --ide2 local:iso/ubuntu-24.04.3-live-server-amd64.iso,media=cdrom \
+  --boot "order=scsi0;ide2;net0" \
+  --scsi0 rover-storage-main:200,discard=on,iothread=1,ssd=1
+```
+
+**Worker Node 3 (VM 203)**
+```bash
+qm create 203 \
+  --name k8s-worker3 \
+  --agent 1 \
+  --balloon 0 \
+  --cores 4 \
+  --sockets 2 \
+  --cpu host \
+  --memory 16384 \
   --numa 0 \
   --scsihw virtio-scsi-single \
   --net0 virtio,bridge=vmbr0,tag=67,firewall=0 \
@@ -114,7 +139,7 @@ qm create 200 \
   --cores 2 \
   --sockets 2 \
   --cpu host \
-  --memory 4096 \
+  --memory 8192 \
   --numa 0 \
   --scsihw virtio-scsi-single \
   --net0 virtio,bridge=vmbr0,tag=67,firewall=0 \
@@ -122,7 +147,7 @@ qm create 200 \
   --onboot 1 \
   --ide2 local:iso/ubuntu-24.04.3-live-server-amd64.iso,media=cdrom \
   --boot "order=scsi0;ide2;net0" \
-  --scsi0 local-lvm:100,discard=on,iothread=1,ssd=1
+  --scsi0 local-lvm:200,discard=on,iothread=1,ssd=1
 ```
 
 ---
