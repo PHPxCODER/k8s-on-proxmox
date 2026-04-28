@@ -69,7 +69,7 @@ variable "master_ip" {
 variable "worker_ips" {
   description = "Static IPs for worker nodes"
   type        = list(string)
-  default     = ["10.69.67.201", "10.69.67.202"]
+  default     = ["10.69.67.201", "10.69.67.202", "10.69.67.203"]
 }
 
 # VM credentials
