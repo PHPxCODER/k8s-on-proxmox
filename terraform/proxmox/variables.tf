@@ -63,13 +63,13 @@ variable "gateway" {
 variable "master_ip" {
   description = "Static IP for the master node"
   type        = string
-  default     = "10.69.5.200"
+  default     = "10.69.67.200"
 }
 
 variable "worker_ips" {
   description = "Static IPs for worker nodes"
   type        = list(string)
-  default     = ["10.69.5.201", "10.69.5.202"]
+  default     = ["10.69.67.201", "10.69.67.202"]
 }
 
 # VM credentials
