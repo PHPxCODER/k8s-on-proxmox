@@ -57,7 +57,7 @@ variable "bridge" {
 variable "gateway" {
   description = "Default gateway for VMs"
   type        = string
-  default     = "10.69.5.1"
+  default     = "10.69.67.1"
 }
 
 variable "master_ip" {
