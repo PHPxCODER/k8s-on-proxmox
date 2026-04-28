@@ -462,7 +462,8 @@ helm repo add headlamp https://headlamp-k8s.github.io/headlamp/
 helm repo update
 helm upgrade --install headlamp headlamp/headlamp \
   --namespace headlamp \
-  --create-namespace
+  --create-namespace \
+  --set service.type=LoadBalancer
 ```
 
 Verify the pod is running:
@@ -473,27 +474,31 @@ kubectl get pods -n headlamp
 
 ### Access the Dashboard
 
+MetalLB will assign Headlamp an external IP from your pool. Check it with:
+
 ```bash
-kubectl port-forward -n headlamp svc/headlamp 4466:4466
+kubectl get svc -n headlamp
 ```
 
-Then open **http://localhost:4466** in your browser.
-
-> **Note:** This only works from the machine running the port-forward command. For remote access, forward through an SSH tunnel.
+Then open **http://\<EXTERNAL-IP\>** directly in your browser from any machine on the VLAN.
 
 ### Create a Service Account Token
 
-Headlamp uses Bearer Token authentication. Create a dedicated service account:
+Headlamp uses Bearer Token authentication. Create a dedicated service account and bind it to `cluster-admin`:
 
 ```bash
 kubectl create serviceaccount headlamp-admin -n headlamp
-kubectl create clusterrolebinding headlamp-admin \
-  --clusterrole=cluster-admin \
-  --serviceaccount=headlamp:headlamp-admin
+kubectl create clusterrolebinding headlamp-admin --clusterrole=cluster-admin --serviceaccount=headlamp:headlamp-admin
 kubectl create token headlamp-admin -n headlamp
 ```
 
 Paste the token into the Headlamp login screen.
+
+> **Note:** If reinstalling, the clusterrolebinding may already exist. Delete it first:
+> ```bash
+> kubectl delete clusterrolebinding headlamp-admin
+> ```
+> Then re-run the `create clusterrolebinding` and `create token` commands above.
 
 > **Warning:** `cluster-admin` grants full privileges — use for lab/testing purposes only.
 
