@@ -14,19 +14,19 @@ variable "kubeconfig_context" {
 variable "metallb_version" {
   description = "MetalLB manifest version"
   type        = string
-  default     = "v0.14.9"
+  default     = "v0.15.3"
 }
 
 variable "metallb_ip_pool_name" {
   description = "Name for the MetalLB IP address pool"
   type        = string
-  default     = "lab-pool"
+  default     = "rdp-labs-pool"
 }
 
 variable "metallb_ip_range" {
   description = "IP range MetalLB will assign to LoadBalancer services"
   type        = string
-  default     = "10.69.5.240-10.69.5.245"
+  default     = "10.69.67.220-10.69.67.245"
 }
 
 # HAProxy ingress
