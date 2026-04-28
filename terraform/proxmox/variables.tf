@@ -45,7 +45,7 @@ variable "iso_storage" {
 variable "vlan_tag" {
   description = "VLAN tag for VM network interfaces"
   type        = number
-  default     = 5
+  default     = 67
 }
 
 variable "bridge" {
