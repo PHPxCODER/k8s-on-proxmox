@@ -451,60 +451,51 @@ kubectl apply -f proxmox-ip-pool.yaml
 
 ---
 
-## 9. Testing — Deploy nginx
+## 9. Headlamp — Kubernetes Web UI
 
-Create `nginx-test.yaml`:
+The official Kubernetes Dashboard is deprecated and unmaintained. This guide uses [Headlamp](https://headlamp.dev/) — a modern, actively maintained replacement with a cleaner UI and better RBAC support.
 
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nginx-test
-spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: nginx
-  template:
-    metadata:
-      labels:
-        app: nginx
-    spec:
-      containers:
-      - name: nginx
-        image: nginx:latest
-        ports:
-        - containerPort: 80
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: nginx-service
-spec:
-  selector:
-    app: nginx
-  ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 80
-  type: LoadBalancer
-```
-
-Deploy it:
+### Install via Helm
 
 ```bash
-kubectl apply -f nginx-test.yaml
+helm repo add headlamp https://headlamp-k8s.github.io/headlamp/
+helm repo update
+helm upgrade --install headlamp headlamp/headlamp \
+  --namespace headlamp \
+  --create-namespace
 ```
 
-Check the service:
+Verify the pod is running:
 
 ```bash
-kubectl get svc nginx-service
+kubectl get pods -n headlamp
 ```
 
-You should see both a cluster IP and an **external IP** assigned by MetalLB.
-Just type that IP address in your browser (like `10.69.67.240` for me) and you should see **'Welcome to nginx'**.
-It's the same as running `http://10.69.67.240:80`.
+### Access the Dashboard
+
+```bash
+kubectl port-forward -n headlamp svc/headlamp 4466:4466
+```
+
+Then open **http://localhost:4466** in your browser.
+
+> **Note:** This only works from the machine running the port-forward command. For remote access, forward through an SSH tunnel.
+
+### Create a Service Account Token
+
+Headlamp uses Bearer Token authentication. Create a dedicated service account:
+
+```bash
+kubectl create serviceaccount headlamp-admin -n headlamp
+kubectl create clusterrolebinding headlamp-admin \
+  --clusterrole=cluster-admin \
+  --serviceaccount=headlamp:headlamp-admin
+kubectl create token headlamp-admin -n headlamp
+```
+
+Paste the token into the Headlamp login screen.
+
+> **Warning:** `cluster-admin` grants full privileges — use for lab/testing purposes only.
 
 ---
 
@@ -551,19 +542,19 @@ Once the controller is running, you can route traffic to your services using an 
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: nginx-ingress
+  name: my-ingress
   annotations:
     ingress.class: haproxy
 spec:
   rules:
-  - host: nginx.lab.local
+  - host: myapp.lab.local
     http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: nginx-service
+            name: my-service
             port:
               number: 80
 ```
@@ -574,55 +565,7 @@ Apply it:
 kubectl apply -f ingress-example.yaml
 ```
 
-Now requests to `http://nginx.lab.local` (with that hostname pointing to your HAProxy external IP in DNS or `/etc/hosts`) will be routed to the nginx service.
-
----
-
-## 11. Headlamp — Kubernetes Web UI
-
-The official Kubernetes Dashboard is deprecated and unmaintained. This guide uses [Headlamp](https://headlamp.dev/) — a modern, actively maintained replacement with a cleaner UI and better RBAC support.
-
-### Install via Helm
-
-```bash
-helm repo add headlamp https://headlamp-k8s.github.io/headlamp/
-helm repo update
-helm upgrade --install headlamp headlamp/headlamp \
-  --namespace headlamp \
-  --create-namespace
-```
-
-Verify the pod is running:
-
-```bash
-kubectl get pods -n headlamp
-```
-
-### Access the Dashboard
-
-```bash
-kubectl port-forward -n headlamp svc/headlamp 4466:4466
-```
-
-Then open **http://localhost:4466** in your browser.
-
-> **Note:** This only works from the machine running the port-forward command. For remote access, forward through an SSH tunnel.
-
-### Create a Service Account Token
-
-Headlamp uses Bearer Token authentication. Create a dedicated service account:
-
-```bash
-kubectl create serviceaccount headlamp-admin -n headlamp
-kubectl create clusterrolebinding headlamp-admin \
-  --clusterrole=cluster-admin \
-  --serviceaccount=headlamp:headlamp-admin
-kubectl create token headlamp-admin -n headlamp
-```
-
-Paste the token into the Headlamp login screen.
-
-> **Warning:** `cluster-admin` grants full privileges — use for lab/testing purposes only.
+Now requests to `http://myapp.lab.local` (with that hostname pointing to your HAProxy external IP in DNS or `/etc/hosts`) will be routed to the service.
 
 ---
 
