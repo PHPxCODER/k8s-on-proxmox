@@ -608,7 +608,67 @@ docker push registry.yourdomain.com/ubuntu:24.04
 
 ---
 
-## 11. HAProxy Ingress Controller
+## 11. ArgoCD — GitOps Continuous Delivery
+
+ArgoCD is a declarative GitOps tool that continuously syncs your Kubernetes cluster state with a Git repository. Instead of running `kubectl apply` manually, you push to Git and ArgoCD handles the rest.
+
+### Install
+
+```bash
+kubectl create namespace argocd
+kubectl apply -n argocd --server-side --force-conflicts -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+```
+
+> **Note:** `--server-side` is required because some ArgoCD CRDs (like ApplicationSet) exceed the 262KB annotation size limit of client-side apply. `--force-conflicts` allows the operation to take ownership of fields previously managed by other tools — safe for fresh installs and necessary for upgrades.
+
+Verify all pods are running (may take a minute):
+
+```bash
+kubectl get pods -n argocd
+```
+
+### Expose via MetalLB
+
+By default the ArgoCD server service is `ClusterIP`. Patch it to `LoadBalancer` so MetalLB assigns it an external IP:
+
+```bash
+kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
+```
+
+Check the assigned IP:
+
+```bash
+kubectl get svc argocd-server -n argocd
+```
+
+Open **https://\<EXTERNAL-IP\>** in your browser. You will get a TLS warning — ArgoCD uses a self-signed cert by default, which is fine for a lab.
+
+### Get the initial admin password
+
+```bash
+kubectl get secret argocd-initial-admin-secret -n argocd -o jsonpath="{.data.password}" | base64 -d
+```
+
+Log in with username `admin` and the password from the command above.
+
+> **Note:** Change the password after first login via **User Info → Update Password** in the ArgoCD UI.
+
+### Install the ArgoCD CLI (optional)
+
+```bash
+curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+chmod +x /usr/local/bin/argocd
+```
+
+Log in via CLI:
+
+```bash
+argocd login <EXTERNAL-IP> --username admin --password <password> --insecure
+```
+
+---
+
+## 12. HAProxy Ingress Controller
 
 An Ingress Controller allows you to route external HTTP/HTTPS traffic to services inside the cluster using hostnames and paths — a cleaner alternative to exposing every service via LoadBalancer.
 
