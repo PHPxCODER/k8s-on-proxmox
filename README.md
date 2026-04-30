@@ -581,10 +581,20 @@ In NPM, create a new **Proxy Host**:
 - **Forward Port**: `5000`
 - Enable **SSL** and request a Let's Encrypt certificate
 
-> **Important:** Under the **Advanced** tab add the following to handle large image layer uploads:
+> **Important:** Under the **Advanced** tab add the following to handle large image layer uploads and long-running push/pull operations:
 >
 > ```nginx
 > client_max_body_size 0;
+> chunked_transfer_encoding on;
+>
+> proxy_read_timeout    900;
+> proxy_connect_timeout 900;
+> proxy_send_timeout    900;
+>
+> proxy_set_header Host              $host;
+> proxy_set_header X-Real-IP         $remote_addr;
+> proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+> proxy_set_header X-Forwarded-Proto $scheme;
 > ```
 
 ### Test
