@@ -504,7 +504,101 @@ Paste the token into the Headlamp login screen.
 
 ---
 
-## 10. HAProxy Ingress Controller
+## 10. Private Container Registry
+
+A self-hosted Docker Registry v2 running on a separate machine via Docker Compose, exposed over HTTPS through Nginx Proxy Manager.
+
+### Prerequisites
+
+Install Docker and Docker Compose on the registry machine:
+
+```bash
+curl -fsSL https://get.docker.com | sh
+```
+
+### Directory Structure
+
+```
+registry/
+├── docker-compose.yml
+├── auth/
+│   └── htpasswd
+└── data/
+```
+
+Create the directories:
+
+```bash
+mkdir -p registry/{auth,data}
+cd registry
+```
+
+### Create credentials
+
+Install `apache2-utils` to generate the htpasswd file:
+
+```bash
+sudo apt install apache2-utils -y
+htpasswd -Bc auth/htpasswd <your-username>
+```
+
+You'll be prompted to enter a password. To add more users, drop the `-c` flag (it overwrites).
+
+### Docker Compose
+
+Create `docker-compose.yml`:
+
+```yaml
+services:
+  registry:
+    image: registry:2
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - REGISTRY_AUTH=htpasswd
+      - REGISTRY_AUTH_HTPASSWD_REALM=Registry
+      - REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd
+      - REGISTRY_STORAGE_DELETE_ENABLED=true
+    volumes:
+      - ./data:/var/lib/registry
+      - ./auth:/auth
+```
+
+Start it:
+
+```bash
+docker compose up -d
+```
+
+### Expose via Nginx Proxy Manager
+
+In NPM, create a new **Proxy Host**:
+
+- **Domain**: `registry.yourdomain.com`
+- **Scheme**: `http`
+- **Forward Hostname/IP**: IP of the registry machine
+- **Forward Port**: `5000`
+- Enable **SSL** and request a Let's Encrypt certificate
+
+> **Important:** Under the **Advanced** tab add the following to handle large image layer uploads:
+>
+> ```nginx
+> client_max_body_size 0;
+> ```
+
+### Test
+
+```bash
+docker login registry.yourdomain.com
+docker pull ubuntu:24.04
+docker tag ubuntu:24.04 registry.yourdomain.com/ubuntu:24.04
+docker push registry.yourdomain.com/ubuntu:24.04
+```
+
+---
+
+## 11. HAProxy Ingress Controller
 
 An Ingress Controller allows you to route external HTTP/HTTPS traffic to services inside the cluster using hostnames and paths — a cleaner alternative to exposing every service via LoadBalancer.
 
